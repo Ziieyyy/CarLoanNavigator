@@ -1,0 +1,110 @@
+/* Custom properties for StaggeredMenu component */
+:root {
+  --sm-num-opacity: 0;
+}
+
+.sm-container {
+  /* Container styles */
+}
+
+.sm-toggle-btn {
+  /* Toggle button styles */
+  background: none;
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.sm-icon {
+  /* Icon container */
+}
+
+.sm-plus-h,
+.sm-plus-v {
+  /* Plus sign elements */
+  transition: transform 0.3s ease;
+}
+
+.sm-text-wrap {
+  /* Text wrapper */
+  width: 40px;
+  transition: opacity 0.3s ease;
+}
+
+.sm-text-inner {
+  /* Text inner container */
+}
+
+.sm-text-line {
+  /* Individual text lines */
+}
+
+.sm-prelayers {
+  /* Pre-layer container */
+}
+
+.sm-prelayer {
+  /* Individual pre-layers */
+}
+
+.sm-panel {
+  /* Main panel */
+}
+
+.sm-panel-list {
+  /* Panel list */
+}
+
+.sm-panel-list[data-numbering] .sm-panel-item {
+  /* Items with numbering */
+}
+
+.sm-panel-item {
+  /* Individual items */
+}
+
+.sm-panel-itemLabel {
+  /* Item labels */
+  text-decoration: none;
+  display: block;
+  padding: 0.5rem 0;
+  transition: color 0.3s ease;
+}
+
+.sm-panel-itemLabel:hover {
+  /* Hover state for item labels */
+}
+
+.sm-panel-itemNumber {
+  /* Item numbers */
+  opacity: var(--sm-num-opacity);
+  transition: opacity 0.3s ease;
+}
+
+.sm-panel-itemText {
+  /* Item text */
+}
+
+.sm-socials {
+  /* Social section */
+}
+
+.sm-socials-title {
+  /* Social section title */
+}
+
+.sm-socials-link {
+  /* Social links */
+  text-decoration: none;
+  display: block;
+  padding: 0.25rem 0;
+  transition: color 0.3s ease;
+}
+
+.sm-socials-link:hover {
+  /* Hover state for social links */
+}
+
+.sm-logo {
+  /* Logo section */
+}

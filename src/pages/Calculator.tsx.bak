@@ -1,0 +1,359 @@
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Navbar } from '@/components/Navbar';
+import { useToast } from '@/hooks/use-toast';
+import { AlertCircle, CheckCircle2, TrendingUp } from 'lucide-react';
+
+interface Car {
+  id: string;
+  brand: string;
+  category?: string;
+  model: string;
+  price: number;
+}
+
+interface LoanResult {
+  bank: string;
+  rate: number;
+  loanAmount: number;
+  totalInterest: number;
+  totalPayment: number;
+  monthlyPayment: number;
+  approvalChance: 'High' | 'Medium' | 'Low';
+  suggestion: string;
+  years: number;
+}
+
+const banks = [
+  { name: 'Bank A', rate: 2.5 },
+  { name: 'Bank B', rate: 2.7 },
+  { name: 'Bank C', rate: 3.0 },
+];
+
+const Calculator = () => {
+  const [searchParams] = useSearchParams();
+  const carId = searchParams.get('carId');
+  
+  const [cars, setCars] = useState<Car[]>([]);
+  const [selectedCarId, setSelectedCarId] = useState(carId || '');
+  const [selectedCar, setSelectedCar] = useState<Car | null>(null);
+  const [downPayment, setDownPayment] = useState('');
+  const [tenure, setTenure] = useState('5');
+  const [salary, setSalary] = useState('');
+  const [results, setResults] = useState<LoanResult[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchCars();
+  }, []);
+
+  useEffect(() => {
+    if (selectedCarId) {
+      const car = cars.find(c => c.id === selectedCarId);
+      setSelectedCar(car || null);
+    }
+  }, [selectedCarId, cars]);
+
+  useEffect(() => {
+    // Recalculate when tenure changes and we have all required data
+    if (selectedCar && downPayment && salary) {
+      calculateLoan();
+    }
+  }, [tenure]);
+
+  const fetchCars = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cars')
+        .select('id, brand, category, model, price')
+        .order('brand');
+
+      if (error) throw error;
+      setCars(data || []);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: 'Failed to load cars',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateLoan = () => {
+    if (!selectedCar || !downPayment || !salary) {
+      toast({
+        title: 'Missing Information',
+        description: 'Please fill in all fields',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const carPrice = selectedCar.price;
+    const down = parseFloat(downPayment);
+    const monthlySalary = parseFloat(salary);
+
+    if (down >= carPrice) {
+      toast({
+        title: 'Invalid Down Payment',
+        description: 'Down payment must be less than car price',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Calculate only for the selected tenure
+    const years = parseInt(tenure);
+    const loanResults: LoanResult[] = banks.map(bank => {
+      const loanAmount = carPrice - down;
+      const totalInterest = loanAmount * (bank.rate / 100) * years;
+      const totalPayment = loanAmount + totalInterest;
+      const monthlyPayment = totalPayment / (years * 12);
+
+      const maxAffordable = monthlySalary * 0.30;
+      let approvalChance: 'High' | 'Medium' | 'Low';
+      let suggestion: string;
+
+      if (monthlyPayment <= monthlySalary * 0.20) {
+        approvalChance = 'High';
+        suggestion = 'Excellent! This loan is well within your budget.';
+      } else if (monthlyPayment <= monthlySalary * 0.30) {
+        approvalChance = 'Medium';
+        suggestion = 'Affordable, but consider your other expenses.';
+      } else {
+        approvalChance = 'Low';
+        const increase = (monthlyPayment - maxAffordable) * years * 12;
+        suggestion = `Monthly payment exceeds recommended limit. Consider increasing down payment by RM${increase.toFixed(0)}.`;
+      }
+
+      return {
+        bank: bank.name,
+        rate: bank.rate,
+        loanAmount,
+        totalInterest,
+        totalPayment,
+        monthlyPayment,
+        approvalChance,
+        suggestion,
+        years: years
+      };
+    });
+
+    setResults(loanResults);
+  };
+
+  const getApprovalIcon = (chance: string) => {
+    if (chance === 'High') return <CheckCircle2 className="h-5 w-5 text-success" />;
+    if (chance === 'Medium') return <TrendingUp className="h-5 w-5 text-warning" />;
+    return <AlertCircle className="h-5 w-5 text-destructive" />;
+  };
+
+  const getApprovalColor = (chance: string) => {
+    if (chance === 'High') return 'text-success';
+    if (chance === 'Medium') return 'text-warning';
+    return 'text-destructive';
+  };
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Navbar />
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2">Loan Calculator</h1>
+          <p className="text-muted-foreground">Compare loan options from 3 banks based on your salary</p>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-1">
+            <CardHeader>
+              <CardTitle>Loan Details</CardTitle>
+              <CardDescription>Enter your information</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Select Car</Label>
+                <Select value={selectedCarId} onValueChange={setSelectedCarId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a car" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cars.map((car) => (
+                      <SelectItem key={car.id} value={car.id}>
+                        {car.brand} {car.model} - RM{car.price.toLocaleString()}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="downPayment">Down Payment (RM)</Label>
+                <Input
+                  id="downPayment"
+                  type="number"
+                  placeholder="10000"
+                  value={downPayment}
+                  onChange={(e) => setDownPayment(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tenure">Loan Tenure (Years)</Label>
+                <Select value={tenure} onValueChange={setTenure}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5, 7, 9].map((year) => (
+                      <SelectItem 
+                        key={year} 
+                        value={year.toString()}
+                        className={tenure === year.toString() ? 'bg-emerald-500 text-white' : ''}
+                      >
+                        {year} {year === 1 ? 'Year' : 'Years'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="salary">Monthly Salary (RM)</Label>
+                <Input
+                  id="salary"
+                  type="number"
+                  placeholder="5000"
+                  value={salary}
+                  onChange={(e) => setSalary(e.target.value)}
+                />
+              </div>
+
+              <Button onClick={calculateLoan} className="w-full">
+                Calculate
+              </Button>
+
+              {salary && (
+                <Card className="bg-muted">
+                  <CardContent className="pt-4">
+                    <p className="text-sm text-muted-foreground mb-1">Recommended Max Payment</p>
+                    <p className="text-xl font-bold">
+                      RM{(parseFloat(salary) * 0.30).toFixed(2)}/month
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      (30% of your salary)
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="lg:col-span-2 space-y-4">
+            {results.length > 0 ? (
+              <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Loan Comparison</CardTitle>
+                    <CardDescription>
+                      {selectedCar && `${selectedCar.brand} ${selectedCar.model}`}
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+
+                {/* Display results for the selected tenure */}
+                <div className="mb-8">
+                  <h3 className="text-2xl font-bold mb-4">{tenure} {parseInt(tenure) === 1 ? 'Year' : 'Years'} Loan Options</h3>
+                  const tenureResults = results.filter(r => r.years === years);
+                  if (tenureResults.length === 0) return null;
+                  
+                  return (
+                    <div key={years} className="mb-8">
+                      <h3 className="text-2xl font-bold mb-4">{years} Years Loan Options</h3>
+                      {tenureResults.map((result, index) => (
+                        <Card key={index} className="mb-4">
+                          <CardHeader>
+                            <div className="flex items-center justify-between">
+                              <CardTitle>{result.bank}</CardTitle>
+                              <div className="flex items-center gap-2">
+                                {getApprovalIcon(result.approvalChance)}
+                                <span className={`font-semibold ${getApprovalColor(result.approvalChance)}`}>
+                                  {result.approvalChance} Approval Chance
+                                </span>
+                              </div>
+                            </div>
+                            <CardDescription>Interest Rate: {result.rate}%</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                              <div>
+                                <p className="text-sm text-muted-foreground">Loan Amount</p>
+                                <p className="text-lg font-bold">RM{result.loanAmount.toLocaleString()}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Total Interest</p>
+                                <p className="text-lg font-bold">RM{result.totalInterest.toFixed(2)}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Total Payment</p>
+                                <p className="text-lg font-bold">RM{result.totalPayment.toFixed(2)}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Monthly Payment</p>
+                                <p className="text-xl font-bold text-primary">
+                                  RM{result.monthlyPayment.toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+                            <Card className={`border-2 ${
+                              result.approvalChance === 'High' ? 'border-success' :
+                              result.approvalChance === 'Medium' ? 'border-warning' :
+                              'border-destructive'
+                            }`}>
+                              <CardContent className="pt-4">
+                                <p className="text-sm">{result.suggestion}</p>
+                              </CardContent>
+                            </Card>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  );
+                })}
+              </>
+            ) : (
+              <Card className="text-center py-12">
+                <CardContent>
+                  <p className="text-muted-foreground">
+                    Enter your details and click Calculate to see loan comparisons
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default Calculator;

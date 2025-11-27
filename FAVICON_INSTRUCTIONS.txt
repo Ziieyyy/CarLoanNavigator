@@ -1,0 +1,13 @@
+Favicon Replacement Instructions:
+
+1. The car-themed favicon SVG is located at: /public/car-favicon.svg
+2. To create a proper favicon.ico file:
+   a. Use an online SVG to ICO converter
+   b. Convert the car-favicon.svg to favicon.ico format
+   c. Replace the existing /public/favicon.ico with the converted file
+
+Alternatively, you can:
+1. Use an image editor to create a 16x16 or 32x32 pixel car icon
+2. Save it as favicon.ico in the public directory
+
+The HTML has already been updated to reference both the SVG and ICO versions of the favicon.
