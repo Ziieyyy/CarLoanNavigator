@@ -6,12 +6,15 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Format number with commas for better readability
+ * Format number with commas and 2 decimal places for better readability
  * @param value - Number to format
- * @returns Formatted string with commas
+ * @returns Formatted string with commas and 2 decimal places
  */
 export function formatNumber(value: number): string {
-  return value.toLocaleString();
+  return value.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 }
 
 /**

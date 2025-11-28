@@ -98,7 +98,7 @@ const CarDetail = () => {
         <div className="space-y-8">
           {/* Hero Image */}
           <Card>
-            <CardContent className="p-0">
+            <CardContent className="p-0 bg-gray-100 dark:bg-white">
               {car.image_url ? (
                 <img
                   src={car.image_url}

@@ -3,17 +3,35 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Car, LogOut, User, Settings, LayoutDashboard, Languages, Menu, X } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
+import { Car, LogOut, User, Settings, LayoutDashboard, Languages, Menu, X, Moon, Sun } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export const Navbar = () => {
   const { user, isAdmin, signOut } = useAuth();
   const { language, setLanguage, t } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
+    setShowLogoutDialog(false);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutDialog(true);
   };
 
   const toggleLanguage = () => {
@@ -31,22 +49,21 @@ export const Navbar = () => {
   ];
 
   return (
-    // Updated navbar with new color scheme
-    <nav className="border-b border-border bg-primary text-primary-foreground">
+    <nav className="border-b border-border bg-background shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2 font-bold text-xl">
+          <Link to="/" className="flex items-center gap-2 font-bold text-xl text-primary">
             <Car className="h-8 w-8" />
-            <span>Car Loan Navigator</span>
+            <span>AUTO FINANCE CALCULATOR</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-6">
             {user ? (
               <>
                 {navItems.map((item, index) => (
                   <Link key={index} to={item.link}>
-                    <Button variant="ghost" className="text-primary-foreground hover:bg-[#D12336] hover:text-white">
+                    <Button variant="ghost" className="text-foreground hover:text-primary hover:bg-transparent font-medium">
                       {item.label}
                     </Button>
                   </Link>
@@ -54,45 +71,71 @@ export const Navbar = () => {
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  onClick={toggleLanguage}
-                  className="text-primary-foreground hover:bg-[#D12336] hover:text-white"
+                  onClick={toggleTheme}
+                  className="text-foreground hover:text-primary hover:bg-transparent"
                 >
-                  <Languages className="h-4 w-4" />
+                  {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={toggleLanguage}
+                  className="text-foreground hover:text-primary hover:bg-transparent"
+                >
+                  <Languages className="h-5 w-5" />
                 </Button>
                 <Link to="/profile">
                   <Button 
                     variant="ghost" 
                     size="icon"
-                    className="text-primary-foreground hover:bg-[#D12336] hover:text-white"
+                    className="text-foreground hover:text-primary hover:bg-transparent"
                   >
-                    <User className="h-4 w-4" />
+                    <User className="h-5 w-5" />
                   </Button>
                 </Link>
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  onClick={handleSignOut}
-                  className="text-primary-foreground hover:bg-[#D12336] hover:text-white"
+                  onClick={confirmLogout}
+                  className="text-foreground hover:text-primary hover:bg-transparent"
                 >
-                  <LogOut className="h-4 w-4" />
+                  <LogOut className="h-5 w-5" />
                 </Button>
               </>
             ) : (
-              <Link to="/auth">
-                <Button className="bg-white text-[#A50021] hover:bg-[#D12336] hover:text-white">
-                  {t('navbar.login')}
+              <>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={toggleTheme}
+                  className="text-foreground hover:text-primary hover:bg-transparent"
+                >
+                  {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                 </Button>
-              </Link>
+                <Link to="/auth">
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6">
+                    {t('navbar.login')}
+                  </Button>
+                </Link>
+              </>
             )}
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleTheme}
+              className="text-foreground"
+            >
+              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </Button>
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={toggleMenu}
-              className="text-primary-foreground"
+              className="text-foreground"
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
@@ -101,7 +144,7 @@ export const Navbar = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden bg-primary text-primary-foreground border-t border-border">
+          <div className="md:hidden bg-background border-t border-border">
             <div className="px-2 pt-2 pb-3 space-y-1">
               {user ? (
                 <>
@@ -109,7 +152,7 @@ export const Navbar = () => {
                     <Link 
                       key={index} 
                       to={item.link} 
-                      className="block px-3 py-2 rounded-md text-base font-medium hover:bg-[#D12336] hover:text-white"
+                      className="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:text-primary hover:bg-muted"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       {item.label}
@@ -120,23 +163,23 @@ export const Navbar = () => {
                       toggleLanguage();
                       setIsMenuOpen(false);
                     }}
-                    className="w-full text-left block px-3 py-2 rounded-md text-base font-medium hover:bg-[#D12336] hover:text-white"
+                    className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-foreground hover:text-primary hover:bg-muted"
                   >
                     {language === 'en' ? 'Bahasa Malaysia' : 'English'}
                   </button>
                   <Link 
                     to="/profile" 
-                    className="block px-3 py-2 rounded-md text-base font-medium hover:bg-[#D12336] hover:text-white"
+                    className="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:text-primary hover:bg-muted"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {t('navbar.profile')}
                   </Link>
                   <button
                     onClick={() => {
-                      handleSignOut();
+                      confirmLogout();
                       setIsMenuOpen(false);
                     }}
-                    className="w-full text-left block px-3 py-2 rounded-md text-base font-medium hover:bg-[#D12336] hover:text-white"
+                    className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-foreground hover:text-primary hover:bg-muted"
                   >
                     {t('navbar.logout')}
                   </button>
@@ -144,7 +187,7 @@ export const Navbar = () => {
               ) : (
                 <Link 
                   to="/auth" 
-                  className="block px-3 py-2 rounded-md text-base font-medium hover:bg-[#D12336] hover:text-white"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:text-primary hover:bg-muted"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {t('navbar.login')}
@@ -154,6 +197,23 @@ export const Navbar = () => {
           </div>
         )}
       </div>
+
+      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('navbar.logoutConfirmTitle') || 'Confirm Logout'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('navbar.logoutConfirmMessage') || 'Are you sure you want to log out?'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('navbar.cancel') || 'Cancel'}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSignOut}>
+              {t('navbar.logout') || 'Log Out'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </nav>
   );
 };

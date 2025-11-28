@@ -62,17 +62,39 @@ const Calculator = () => {
   const carId = searchParams.get('carId');
   const { t } = useLanguage();
   
+  // Load saved calculator state from localStorage
+  const loadSavedState = () => {
+    try {
+      const saved = localStorage.getItem('calculatorState');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.error('Failed to load calculator state:', error);
+    }
+    return null;
+  };
+
+  const savedState = loadSavedState();
+  
   const [cars, setCars] = useState<Vehicle[]>([]);
   const [banks, setBanks] = useState<any[]>([]);
-  const [selectedCarId, setSelectedCarId] = useState(carId || '');
+  const [selectedCarId, setSelectedCarId] = useState(carId || savedState?.selectedCarId || '');
   const [selectedCar, setSelectedCar] = useState<Vehicle | null>(null);
-  const [downPayment, setDownPayment] = useState('');
-  const [tenure, setTenure] = useState('5');
-  const [salary, setSalary] = useState('');
+  const [downPayment, setDownPayment] = useState(savedState?.downPayment || '');
+  const [tenure, setTenure] = useState(savedState?.tenure || '5');
+  const [salary, setSalary] = useState(savedState?.salary || '');
   const [results, setResults] = useState<LoanResult[]>([]);
   const [loading, setLoading] = useState(true);
-  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [categoryFilter, setCategoryFilter] = useState(savedState?.categoryFilter || 'All');
   const { toast } = useToast();
+
+  // Update selectedCarId when carId from URL changes
+  useEffect(() => {
+    if (carId) {
+      setSelectedCarId(carId);
+    }
+  }, [carId]);
 
   useEffect(() => {
     Promise.all([fetchCars(), fetchBanks()]);
@@ -82,6 +104,10 @@ const Calculator = () => {
     if (selectedCarId) {
       const car = cars.find(c => c.id === selectedCarId);
       setSelectedCar(car || null);
+      // Update category filter to match selected car's category
+      if (car && car.category) {
+        setCategoryFilter(car.category);
+      }
     }
   }, [selectedCarId, cars]);
 
@@ -91,6 +117,28 @@ const Calculator = () => {
       calculateLoan();
     }
   }, [tenure]);
+
+  // Save calculator state to localStorage whenever it changes
+  useEffect(() => {
+    const stateToSave = {
+      selectedCarId,
+      downPayment,
+      tenure,
+      salary,
+      categoryFilter
+    };
+    localStorage.setItem('calculatorState', JSON.stringify(stateToSave));
+  }, [selectedCarId, downPayment, tenure, salary, categoryFilter]);
+
+  // Auto-calculate when returning to page with saved state
+  useEffect(() => {
+    if (savedState && selectedCar && savedState.downPayment && savedState.salary) {
+      // Small delay to ensure everything is loaded
+      setTimeout(() => {
+        calculateLoan();
+      }, 100);
+    }
+  }, [selectedCar]);
 
   const fetchCars = async () => {
     try {
@@ -213,7 +261,20 @@ const Calculator = () => {
         // Ensure recommended down payment is higher than current down payment
         recommendedDownPayment = Math.max(recommendedDownPayment, down);
         
-        suggestion = t('calculator.exceeds', { amount: formatNumber(recommendedDownPayment - down) });
+        // Calculate recommended minimum salary needed
+        const recommendedSalary = (monthlyPayment / 0.30);
+        const downPaymentDifference = recommendedDownPayment - down;
+        
+        // Build suggestion message
+        let suggestionParts = [];
+        
+        if (downPaymentDifference > 0) {
+          suggestionParts.push(`Consider increasing down payment by RM${formatNumber(downPaymentDifference)}`);
+        }
+        
+        suggestionParts.push(`Have a minimum monthly salary of RM${formatNumber(recommendedSalary)}`);
+        
+        suggestion = `Monthly payment exceeds recommended limit. ${suggestionParts.join(' OR ')}.`;
       }
 
       return {
@@ -268,15 +329,21 @@ const Calculator = () => {
   const handleDownPaymentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/,/g, '');
     if (value === '' || /^\d+$/.test(value)) {
-      setDownPayment(value === '' ? '' : formatNumber(parseInt(value)));
+      setDownPayment(value);
     }
   };
 
   const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/,/g, '');
     if (value === '' || /^\d+$/.test(value)) {
-      setSalary(value === '' ? '' : formatNumber(parseInt(value)));
+      setSalary(value);
     }
+  };
+
+  // Format display values for input fields
+  const formatInputDisplay = (value: string): string => {
+    if (!value) return '';
+    return parseInt(value).toLocaleString('en-US');
   };
 
   return (
@@ -356,7 +423,7 @@ const Calculator = () => {
                   type="text"
                   inputMode="numeric"
                   placeholder={t('calculator.downPaymentPlaceholder')}
-                  value={downPayment}
+                  value={formatInputDisplay(downPayment)}
                   onChange={handleDownPaymentChange}
                   disabled={isCarSelectionDisabled || !selectedCarId}
                 />
@@ -413,7 +480,7 @@ const Calculator = () => {
                   type="text"
                   inputMode="numeric"
                   placeholder={t('calculator.salaryPlaceholder')}
-                  value={salary}
+                  value={formatInputDisplay(salary)}
                   onChange={handleSalaryChange}
                   disabled={isCarSelectionDisabled || !selectedCarId}
                 />
@@ -429,10 +496,10 @@ const Calculator = () => {
 
               {salary && !isCarSelectionDisabled && selectedCarId && (
                 <Card className="bg-muted">
-                  <CardContent className="pt-4">
+                  <CardContent className="pt-4 select-none">
                     <p className="text-sm text-muted-foreground mb-1">{t('calculator.maxPayment')}</p>
                     <p className="text-xl font-bold">
-                      RM{(parseFloat(salary) * 0.30).toFixed(2)}/month
+                      RM{formatNumber(parseFormattedNumber(salary) * 0.30)}/month
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {t('calculator.ofSalary')}
@@ -496,49 +563,47 @@ const Calculator = () => {
                     })}
                   </h3>
                   {results.map((result, index) => (
-                    <Card key={index} className={`mb-4 border-2 cursor-pointer hover:shadow-lg transition-shadow ${getApprovalCardClass(result.approvalChance)}`}>
-                      <Link to={`/banks/${result.bankId}`}>
-                        <CardHeader>
-                          <div className="flex items-center justify-between">
-                            <CardTitle>{result.bank}</CardTitle>
-                            <div className="flex items-center gap-2">
-                              {getApprovalIcon(result.approvalChance)}
-                              <span className={`font-semibold ${getApprovalColor(result.approvalChance)}`}>
-                                {result.approvalChance === 'High' ? t('calculator.highApproval') : 
-                                 result.approvalChance === 'Medium' ? t('calculator.mediumApproval') : 
-                                 t('calculator.lowApproval')}
-                              </span>
-                            </div>
+                    <Card key={index} className={`mb-4 border-2 hover:shadow-lg transition-shadow ${getApprovalCardClass(result.approvalChance)}`}>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="dark:text-white">{result.bank}</CardTitle>
+                          <div className="flex items-center gap-2">
+                            {getApprovalIcon(result.approvalChance)}
+                            <span className={`font-semibold ${getApprovalColor(result.approvalChance)} dark:text-white`}>
+                              {result.approvalChance === 'High' ? t('calculator.highApproval') : 
+                               result.approvalChance === 'Medium' ? t('calculator.mediumApproval') : 
+                               t('calculator.lowApproval')}
+                            </span>
                           </div>
-                          <CardDescription className="font-bold">
-                            {t('calculator.interestRate', { rate: result.rate })}
-                            <p className="text-xs text-muted-foreground mt-1 font-normal">
-                              {t('calculator.ratesChange')}
-                            </p>
-                          </CardDescription>
-                        </CardHeader>
-                      </Link>
-                      <CardContent>
+                        </div>
+                        <CardDescription className="font-bold dark:text-white/90">
+                          {t('calculator.interestRate', { rate: result.rate })}
+                          <p className="text-xs text-muted-foreground dark:text-white/70 mt-1 font-normal">
+                            {t('calculator.ratesChange')}
+                          </p>
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="select-none">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                           <div>
-                            <p className="text-sm text-muted-foreground">{t('calculator.loanAmount')}</p>
-                            <p className="text-lg font-bold">RM{formatNumber(result.loanAmount)}</p>
+                            <p className="text-sm text-muted-foreground dark:text-white/70">{t('calculator.loanAmount')}</p>
+                            <p className="text-lg font-bold dark:text-white">RM{formatNumber(result.loanAmount)}</p>
                           </div>
                           <div>
-                            <p className="text-sm text-muted-foreground">{t('calculator.totalInterest')}</p>
-                            <p className="text-lg font-bold">RM{formatNumber(result.totalInterest)}</p>
+                            <p className="text-sm text-muted-foreground dark:text-white/70">{t('calculator.totalInterest')}</p>
+                            <p className="text-lg font-bold dark:text-white">RM{formatNumber(result.totalInterest)}</p>
                           </div>
                           <div>
-                            <p className="text-sm text-muted-foreground">{t('calculator.totalPayment')}</p>
-                            <p className="text-lg font-bold">RM{formatNumber(result.totalPayment)}</p>
+                            <p className="text-sm text-muted-foreground dark:text-white/70">{t('calculator.totalPayment')}</p>
+                            <p className="text-lg font-bold dark:text-white">RM{formatNumber(result.totalPayment)}</p>
                           </div>
                           <div>
                             <div className="flex items-center gap-1">
-                              <p className="text-sm text-muted-foreground">{t('calculator.monthlyPayment')}</p>
+                              <p className="text-sm text-muted-foreground dark:text-white/70">{t('calculator.monthlyPayment')}</p>
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger>
-                                    <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                                    <HelpCircle className="h-4 w-4 text-muted-foreground dark:text-white/70" />
                                   </TooltipTrigger>
                                   <TooltipContent>
                                     <p>{t('calculator.monthlyPaymentTooltip')}</p>
@@ -546,8 +611,8 @@ const Calculator = () => {
                                 </Tooltip>
                               </TooltipProvider>
                             </div>
-                            <p className="text-xl font-bold text-primary">
-                              RM{formatNumber(result.monthlyPayment)}
+                            <p className="text-xl font-bold text-primary dark:text-white">
+                              RM{formatNumber(result.monthlyPayment)}/month
                             </p>
                           </div>
                         </div>
@@ -555,13 +620,13 @@ const Calculator = () => {
                         {/* Max Payment Recommendation with Tooltip */}
                         <div className="mb-4 p-3 bg-muted rounded-lg">
                           <div className="flex items-center justify-between">
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-muted-foreground dark:text-white/70">
                               {t('calculator.maxPayment')}
                             </p>
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger>
-                                  <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                                  <HelpCircle className="h-4 w-4 text-muted-foreground dark:text-white/70" />
                                 </TooltipTrigger>
                                 <TooltipContent>
                                   <p>{t('calculator.maxPaymentTooltip')}</p>
@@ -569,66 +634,26 @@ const Calculator = () => {
                               </Tooltip>
                             </TooltipProvider>
                           </div>
-                          <p className="text-lg font-bold">
-                            RM{formatNumber(parseFloat(salary) * 0.30)}/month
+                          <p className="text-lg font-bold dark:text-white">
+                            RM{formatNumber(parseFormattedNumber(salary) * 0.30)}/month
                           </p>
                         </div>
                         
                         <Card className={result.approvalChance === 'Low' ? 'border-destructive/30' : ''}>
                           <CardContent className="pt-4">
-                            <p className="text-sm">{result.suggestion}</p>
+                            <p className="text-sm dark:text-white/90">{result.suggestion}</p>
                           </CardContent>
                         </Card>
 
-                        {/* Show recommended down payment button for low approval chances */}
-                        {result.approvalChance === 'Low' && (
-                          <div className="mt-4">
-                            <Button 
-                              variant="destructive" 
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                // Calculate recommended down payment and update the input
-                                const carPrice = selectedCar!.price;
-                                const monthlySalary = parseFormattedNumber(salary);
-                                const maxAffordable = monthlySalary * 0.30;
-                                const years = parseInt(tenure);
-                                const bank = banks.find(b => b.name === result.bank);
-                                
-                                if (bank) {
-                                  const totalLoanAmountForAffordablePayment = maxAffordable * years * 12;
-                                  const recommendedDownPayment = Math.min(
-                                    carPrice - totalLoanAmountForAffordablePayment,
-                                    carPrice
-                                  );
-                                  
-                                  // Update the down payment input with the recommended value
-                                  setDownPayment(formatNumber(Math.max(recommendedDownPayment, 0)));
-                                  
-                                  // Scroll to the calculator form
-                                  document.getElementById('downPayment')?.scrollIntoView({ behavior: 'smooth' });
-                                }
-                              }}
-                            >
-                              {t('calculator.seeRecommendedDownPayment')}
-                            </Button>
-                          </div>
-                        )}
-
-                        {/* Add CTA buttons for each bank */}
-                        <div className="mt-4 flex flex-wrap gap-2">
+                        {/* Add CTA button for bank */}
+                        <div className="mt-4">
                           <Button 
                             variant={result.approvalChance === 'Low' ? 'outline' : 'default'}
-                            className={result.approvalChance === 'Low' ? 'border-destructive text-destructive' : ''}
+                            className={`w-full ${result.approvalChance === 'Low' ? 'border-destructive text-destructive' : ''}`}
                             asChild
                           >
                             <Link to={`/banks/${result.bankId}`}>
                               {t('calculator.applyWithBank', { bank: result.bank })}
-                            </Link>
-                          </Button>
-                          <Button variant="secondary" asChild>
-                            <Link to={`/banks/${result.bankId}`}>
-                              {t('calculator.contactRepresentative', { bank: result.bank })}
                             </Link>
                           </Button>
                         </div>
