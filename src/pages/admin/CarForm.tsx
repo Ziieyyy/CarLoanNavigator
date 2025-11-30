@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { Navbar } from '@/components/Navbar';
 import { useToast } from '@/hooks/use-toast';
 
 const CarForm = () => {
@@ -26,9 +27,6 @@ const CarForm = () => {
   const [acceleration, setAcceleration] = useState('');
   const [topSpeed, setTopSpeed] = useState('');
   const [safetyFeatures, setSafetyFeatures] = useState('');
-  const [modelName, setModelName] = useState('');
-  const [financingText, setFinancingText] = useState('');
-  const [disclaimerText, setDisclaimerText] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -60,9 +58,6 @@ const CarForm = () => {
       setAcceleration(data.acceleration || '');
       setTopSpeed(data.top_speed || '');
       setSafetyFeatures(data.safety_features || '');
-      setModelName(data.model_name || '');
-      setFinancingText(data.financing_text || '');
-      setDisclaimerText(data.disclaimer_text || '');
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -79,6 +74,41 @@ const CarForm = () => {
     setLoading(true);
 
     try {
+      // Validate required fields
+      if (!brand.trim() || !model.trim() || !year || !price) {
+        toast({
+          title: 'Validation Error',
+          description: 'Please fill in all required fields (Brand, Model, Year, Price)',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Validate year range
+      const yearNum = parseInt(year);
+      if (yearNum < 1900 || yearNum > 2100) {
+        toast({
+          title: 'Validation Error',
+          description: 'Year must be between 1900 and 2100',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Validate price
+      const priceNum = parseFloat(price);
+      if (priceNum <= 0) {
+        toast({
+          title: 'Validation Error',
+          description: 'Price must be greater than 0',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
       const carData = {
         brand,
         model,
@@ -92,10 +122,9 @@ const CarForm = () => {
         acceleration: acceleration || null,
         top_speed: topSpeed || null,
         safety_features: safetyFeatures || null,
-        model_name: modelName || null,
-        financing_text: financingText || null,
-        disclaimer_text: disclaimerText || null,
       };
+
+      console.log('Submitting car data:', carData);
 
       if (isEdit) {
         const { error } = await supabase
@@ -109,11 +138,16 @@ const CarForm = () => {
           description: 'Car updated successfully',
         });
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('cars')
-          .insert([carData]);
+          .insert([carData])
+          .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase error:', error);
+          throw error;
+        }
+        console.log('Created car:', data);
         toast({
           title: 'Success',
           description: 'Car created successfully',
@@ -122,9 +156,10 @@ const CarForm = () => {
 
       navigate('/admin/cars');
     } catch (error: any) {
+      console.error('Full error:', error);
       toast({
         title: 'Error',
-        description: `Failed to ${isEdit ? 'update' : 'create'} car`,
+        description: error.message || `Failed to ${isEdit ? 'update' : 'create'} car`,
         variant: 'destructive',
       });
     } finally {
@@ -133,7 +168,9 @@ const CarForm = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
+      <Navbar />
+      <div className="container mx-auto px-4 py-8">
       <Card>
         <CardHeader>
           <CardTitle>{isEdit ? 'Edit Car' : 'Add New Car'}</CardTitle>
@@ -171,6 +208,8 @@ const CarForm = () => {
                   <Input
                     id="year"
                     type="number"
+                    min="1900"
+                    max="2100"
                     value={year}
                     onChange={(e) => setYear(e.target.value)}
                     placeholder="2024"
@@ -183,6 +222,8 @@ const CarForm = () => {
                   <Input
                     id="price"
                     type="number"
+                    min="1"
+                    step="0.01"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
                     placeholder="150000"
@@ -277,42 +318,6 @@ const CarForm = () => {
                     placeholder="ABS, Airbags, Stability Control..."
                   />
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="modelName">Model Name</Label>
-                  <Input
-                    id="modelName"
-                    value={modelName}
-                    onChange={(e) => setModelName(e.target.value)}
-                    placeholder="LE, SE, XSE"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* SECTION C: Legal & Finance */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Legal & Finance</h3>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="financingText">Financing Text (optional)</Label>
-                  <Input
-                    id="financingText"
-                    value={financingText}
-                    onChange={(e) => setFinancingText(e.target.value)}
-                    placeholder="Compare loan options from 3 different banks..."
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="disclaimerText">Disclaimer Text (optional)</Label>
-                  <Input
-                    id="disclaimerText"
-                    value={disclaimerText}
-                    onChange={(e) => setDisclaimerText(e.target.value)}
-                    placeholder="*Terms and conditions apply"
-                  />
-                </div>
               </div>
             </div>
 
@@ -333,6 +338,7 @@ const CarForm = () => {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 };
 
