@@ -68,31 +68,38 @@ export const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
+            {/* Navigation links - always visible */}
+            {navItems.map((item, index) => (
+              <Link key={index} to={item.link}>
+                <Button variant="ghost" className="text-foreground hover:text-primary hover:bg-transparent font-medium">
+                  {item.label}
+                </Button>
+              </Link>
+            ))}
+            
+            {/* Theme toggle - always visible */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleTheme}
+              className="text-foreground hover:text-primary hover:bg-transparent"
+            >
+              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </Button>
+            
+            {/* Language toggle - always visible */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleLanguage}
+              className="text-foreground hover:text-primary hover:bg-transparent"
+            >
+              <Languages className="h-5 w-5" />
+            </Button>
+            
+            {/* User-specific actions */}
             {user ? (
               <>
-                {navItems.map((item, index) => (
-                  <Link key={index} to={item.link}>
-                    <Button variant="ghost" className="text-foreground hover:text-primary hover:bg-transparent font-medium">
-                      {item.label}
-                    </Button>
-                  </Link>
-                ))}
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={toggleTheme}
-                  className="text-foreground hover:text-primary hover:bg-transparent"
-                >
-                  {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={toggleLanguage}
-                  className="text-foreground hover:text-primary hover:bg-transparent"
-                >
-                  <Languages className="h-5 w-5" />
-                </Button>
                 <Link to="/profile">
                   <Button 
                     variant="ghost" 
@@ -112,21 +119,11 @@ export const Navbar = () => {
                 </Button>
               </>
             ) : (
-              <>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={toggleTheme}
-                  className="text-foreground hover:text-primary hover:bg-transparent"
-                >
-                  {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              <Link to="/auth">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6">
+                  {t('navbar.login')}
                 </Button>
-                <Link to="/auth">
-                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6">
-                    {t('navbar.login')}
-                  </Button>
-                </Link>
-              </>
+              </Link>
             )}
           </div>
 
@@ -155,27 +152,32 @@ export const Navbar = () => {
         {isMenuOpen && (
           <div className="md:hidden bg-background border-t border-border">
             <div className="px-2 pt-2 pb-3 space-y-1">
+              {/* Navigation links - always visible */}
+              {navItems.map((item, index) => (
+                <Link 
+                  key={index} 
+                  to={item.link} 
+                  className="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:text-primary hover:bg-muted"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              
+              {/* Language toggle - always visible */}
+              <button
+                onClick={() => {
+                  toggleLanguage();
+                  setIsMenuOpen(false);
+                }}
+                className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-foreground hover:text-primary hover:bg-muted"
+              >
+                {language === 'en' ? 'Bahasa Malaysia' : 'English'}
+              </button>
+              
+              {/* User-specific actions */}
               {user ? (
                 <>
-                  {navItems.map((item, index) => (
-                    <Link 
-                      key={index} 
-                      to={item.link} 
-                      className="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:text-primary hover:bg-muted"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                  <button
-                    onClick={() => {
-                      toggleLanguage();
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-foreground hover:text-primary hover:bg-muted"
-                  >
-                    {language === 'en' ? 'Bahasa Malaysia' : 'English'}
-                  </button>
                   <Link 
                     to="/profile" 
                     className="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:text-primary hover:bg-muted"

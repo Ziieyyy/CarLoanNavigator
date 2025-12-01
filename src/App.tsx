@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -37,35 +36,15 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               
-              <Route path="/cars" element={
-                <ProtectedRoute>
-                  <Cars />
-                </ProtectedRoute>
-              } />
+              <Route path="/cars" element={<Cars />} />
               
-              <Route path="/cars/:id" element={
-                <ProtectedRoute>
-                  <CarDetail />
-                </ProtectedRoute>
-              } />
+              <Route path="/cars/:id" element={<CarDetail />} />
               
-              <Route path="/calculator" element={
-                <ProtectedRoute>
-                  <Calculator />
-                </ProtectedRoute>
-              } />
+              <Route path="/calculator" element={<Calculator />} />
               
-              <Route path="/banks/:id" element={
-                <ProtectedRoute>
-                  <BankDetail />
-                </ProtectedRoute>
-              } />
+              <Route path="/banks/:id" element={<BankDetail />} />
               
-              <Route path="/profile" element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              } />
+              <Route path="/profile" element={<Profile />} />
               
               <Route path="/admin" element={
                 <AdminRoute>

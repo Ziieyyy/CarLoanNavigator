@@ -102,7 +102,7 @@ const Index = () => {
               >
                 <Languages className="h-5 w-5" />
               </Button>
-              <Link to={user ? "/cars" : "/auth"}>
+              <Link to="/cars">
                 <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6">
                   {user ? t('index.dashboard') : t('index.login')}
                 </Button>
@@ -148,7 +148,7 @@ const Index = () => {
               <p className="text-xl lg:text-2xl text-muted-foreground mb-8">
                 {t('index.heroDesc')}
               </p>
-              <Link to={user ? "/calculator" : "/auth"}>
+              <Link to="/calculator">
                 <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-6 text-lg rounded-lg">
                   {t('index.compareRates')}
                 </Button>
@@ -271,7 +271,7 @@ const Index = () => {
                         </button>
                       </div>
 
-                      <Link to={user ? "/cars" : "/auth"}>
+                      <Link to="/cars">
                         <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 py-6 text-lg">
                           {t('index.viewOffers')}
                         </Button>
