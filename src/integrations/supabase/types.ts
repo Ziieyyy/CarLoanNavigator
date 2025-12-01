@@ -152,6 +152,74 @@ export type Database = {
         }
         Relationships: []
       }
+      car_sellers: {
+        Row: {
+          id: string
+          car_id: string
+          seller_name: string
+          seller_website: string
+          is_verified: boolean
+          price_override: number | null
+          stock_note: string | null
+          contact_phone: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          car_id: string
+          seller_name: string
+          seller_website: string
+          is_verified?: boolean
+          price_override?: number | null
+          stock_note?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          car_id?: string
+          seller_name?: string
+          seller_website?: string
+          is_verified?: boolean
+          price_override?: number | null
+          stock_note?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "car_sellers_car_id_fkey"
+            columns: ["car_id"]
+            isOneToOne: false
+            referencedRelation: "cars"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      admin_users: {
+        Row: {
+          id: string
+          user_id: string
+          email: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          email: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          email?: string
+          created_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

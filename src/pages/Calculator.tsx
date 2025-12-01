@@ -372,6 +372,7 @@ const Calculator = () => {
                   <SelectContent>
                     <SelectItem value="All">{t('common.all')}</SelectItem>
                     <SelectItem value="Car">{t('common.car')}</SelectItem>
+                    <SelectItem value="Motorcycle">{t('common.motorcycle')}</SelectItem>
                     <SelectItem value="Van">{t('common.van')}</SelectItem>
                     <SelectItem value="Truck">{t('common.truck')}</SelectItem>
                   </SelectContent>
@@ -578,10 +579,10 @@ const Calculator = () => {
                         </div>
                         <CardDescription className="font-bold dark:text-white/90">
                           {t('calculator.interestRate', { rate: result.rate })}
-                          <p className="text-xs text-muted-foreground dark:text-white/70 mt-1 font-normal">
-                            {t('calculator.ratesChange')}
-                          </p>
                         </CardDescription>
+                        <p className="text-xs text-muted-foreground dark:text-white/70 mt-1 font-normal">
+                          {t('calculator.ratesChange')}
+                        </p>
                       </CardHeader>
                       <CardContent className="select-none">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">

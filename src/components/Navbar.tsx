@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useToast } from '@/hooks/use-toast';
 import { Car, LogOut, User, Settings, LayoutDashboard, Languages, Menu, X, Moon, Sun } from 'lucide-react';
 import {
   AlertDialog,
@@ -20,14 +21,22 @@ export const Navbar = () => {
   const { user, isAdmin, signOut } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
     setShowLogoutDialog(false);
+    await signOut();
+    toast({
+      title: 'Logged out successfully',
+      description: 'You have been signed out of your account.',
+    });
+    // Small delay to ensure state is cleared before navigation
+    setTimeout(() => {
+      navigate('/auth', { replace: true });
+    }, 100);
   };
 
   const confirmLogout = () => {

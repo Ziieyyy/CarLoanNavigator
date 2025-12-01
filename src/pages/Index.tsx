@@ -35,6 +35,11 @@ const Index = () => {
       image: '/images/car.png'
     },
     {
+      name: t('common.motorcycle'),
+      description: t('index.categoryMotorcycleDesc'),
+      image: '/images/vespa.png'
+    },
+    {
       name: t('common.van'),
       description: t('index.categoryVanDesc'),
       image: '/images/van.png'

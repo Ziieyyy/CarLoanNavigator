@@ -3,10 +3,11 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Navbar } from '@/components/Navbar';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Calculator, Car as CarIcon, Calendar, Fuel, Gauge, Zap } from 'lucide-react';
+import { ArrowLeft, Calculator, Car as CarIcon, Calendar, Fuel, Gauge, Zap, Store, ExternalLink, Phone } from 'lucide-react';
 
 interface Car {
   acceleration: string | null;
@@ -27,16 +28,28 @@ interface Car {
   year: number;
 }
 
+interface Seller {
+  id: string;
+  seller_name: string;
+  seller_website: string;
+  is_verified: boolean;
+  price_override: number | null;
+  stock_note: string | null;
+  contact_phone: string | null;
+}
+
 const CarDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [car, setCar] = useState<Car | null>(null);
+  const [sellers, setSellers] = useState<Seller[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchCar();
+    fetchSellers();
   }, [id]);
 
   const fetchCar = async () => {
@@ -69,6 +82,22 @@ const CarDetail = () => {
       navigate('/cars');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSellers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('car_sellers')
+        .select('*')
+        .eq('car_id', id)
+        .order('is_verified', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setSellers(data || []);
+    } catch (error: any) {
+      console.error('Failed to load sellers:', error);
     }
   };
 
@@ -125,61 +154,61 @@ const CarDetail = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <Card>
                   <CardHeader className="flex flex-row items-center gap-3 pb-3">
-                    <Zap className="h-5 w-5 text-primary" />
+                    <Zap className="h-5 w-5 text-primary flex-shrink-0" />
                     <CardTitle className="text-lg">{t('carDetail.engine')}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground">{car.engine || t('carDetail.notSpecified')}</p>
+                    <p className="text-muted-foreground break-words overflow-wrap-anywhere">{car.engine || t('carDetail.notSpecified')}</p>
                   </CardContent>
                 </Card>
                 
                 <Card>
                   <CardHeader className="flex flex-row items-center gap-3 pb-3">
-                    <Gauge className="h-5 w-5 text-primary" />
+                    <Gauge className="h-5 w-5 text-primary flex-shrink-0" />
                   <CardTitle className="text-lg">{t('carDetail.horsepower')}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground">{car.horsepower || t('carDetail.notSpecified')}</p>
+                    <p className="text-muted-foreground break-words overflow-wrap-anywhere">{car.horsepower || t('carDetail.notSpecified')}</p>
                   </CardContent>
                 </Card>
                 
                 <Card>
                   <CardHeader className="flex flex-row items-center gap-3 pb-3">
-                    <Gauge className="h-5 w-5 text-primary" />
+                    <Gauge className="h-5 w-5 text-primary flex-shrink-0" />
                     <CardTitle className="text-lg">{t('carDetail.topSpeed')}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground">{car.top_speed || t('carDetail.notSpecified')}</p>
+                    <p className="text-muted-foreground break-words overflow-wrap-anywhere">{car.top_speed || t('carDetail.notSpecified')}</p>
                   </CardContent>
                 </Card>
                 
                 <Card>
                   <CardHeader className="flex flex-row items-center gap-3 pb-3">
-                    <Fuel className="h-5 w-5 text-primary" />
+                    <Fuel className="h-5 w-5 text-primary flex-shrink-0" />
                     <CardTitle className="text-lg">{t('carDetail.fuelEconomy')}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground">{car.fuel_consumption || t('carDetail.notSpecified')}</p>
+                    <p className="text-muted-foreground break-words overflow-wrap-anywhere">{car.fuel_consumption || t('carDetail.notSpecified')}</p>
                   </CardContent>
                 </Card>
                 
                 <Card>
                   <CardHeader className="flex flex-row items-center gap-3 pb-3">
-                    <Calendar className="h-5 w-5 text-primary" />
+                    <Calendar className="h-5 w-5 text-primary flex-shrink-0" />
                     <CardTitle className="text-lg">{t('carDetail.year')}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground">{car.year}</p>
+                    <p className="text-muted-foreground break-words overflow-wrap-anywhere">{car.year}</p>
                   </CardContent>
                 </Card>
                 
                 <Card>
                   <CardHeader className="flex flex-row items-center gap-3 pb-3">
-                    <CarIcon className="h-5 w-5 text-primary" />
+                    <CarIcon className="h-5 w-5 text-primary flex-shrink-0" />
                     <CardTitle className="text-lg">{t('carDetail.category')}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground capitalize">{car.category}</p>
+                    <p className="text-muted-foreground capitalize break-words overflow-wrap-anywhere">{car.category}</p>
                   </CardContent>
                 </Card>
               </div>
@@ -210,6 +239,74 @@ const CarDetail = () => {
                         {t('carDetail.calculateLoan')}
                       </Button>
                     </Link>
+                  </CardContent>
+                </Card>
+
+                {/* Seller / Purchase Options */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Store className="h-5 w-5" />
+                      {t('seller.title')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {sellers.length > 0 ? (
+                      <div className="space-y-4">
+                        {sellers.map((seller) => (
+                          <Card key={seller.id} className="border-2">
+                            <CardContent className="pt-4 space-y-3">
+                              <div className="flex items-start justify-between gap-2">
+                                <h4 className="font-semibold text-base">{seller.seller_name}</h4>
+                                <Badge variant={seller.is_verified ? 'default' : 'secondary'} className="shrink-0">
+                                  {seller.is_verified ? t('seller.verified') : t('seller.unverified')}
+                                </Badge>
+                              </div>
+
+                              {seller.price_override && (
+                                <div className="bg-muted/50 p-2 rounded">
+                                  <p className="text-sm font-medium">
+                                    {t('seller.price')}: <span className="text-primary">RM{seller.price_override.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                  </p>
+                                </div>
+                              )}
+
+                              {seller.stock_note && (
+                                <p className="text-xs text-muted-foreground">
+                                  📦 {seller.stock_note}
+                                </p>
+                              )}
+
+                              <div className="flex gap-2 pt-2">
+                                <a 
+                                  href={seller.seller_website} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="flex-1"
+                                >
+                                  <Button size="sm" className="w-full" variant="default">
+                                    {t('seller.buyFrom')}
+                                  </Button>
+                                </a>
+                                {seller.contact_phone && (
+                                  <a href={`tel:${seller.contact_phone}`} className="flex-1">
+                                    <Button size="sm" className="w-full" variant="outline">
+                                      <Phone className="h-3 w-3 mr-1" />
+                                      {t('seller.contact')}
+                                    </Button>
+                                  </a>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-6">
+                        <Store className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">{t('seller.noSellers')}</p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>

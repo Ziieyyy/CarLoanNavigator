@@ -120,7 +120,7 @@ const ManageUsers = () => {
           </Button>
         </Link>
         
-        <h1 className="text-4xl font-bold mb-8">Manage Bank</h1>
+        <h1 className="text-4xl font-bold mb-8">Manage Users</h1>
 
         <Card>
           <CardContent className="p-0">

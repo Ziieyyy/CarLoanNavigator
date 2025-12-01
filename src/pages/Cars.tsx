@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Navbar } from '@/components/Navbar';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
-import { Car as CarIcon, Gauge, Fuel, Zap, Search, Truck, Box } from 'lucide-react';
+import { Car as CarIcon, Gauge, Fuel, Zap, Search, Truck, Box, Bike } from 'lucide-react';
 
 interface Car {
   acceleration: string | null;
@@ -96,7 +96,7 @@ const Cars = () => {
     );
   }
 
-  const categories = ['All', 'Car', 'Van', 'Truck'];
+  const categories = ['All', 'Car', 'Motorcycle', 'Van', 'Truck'];
 
   return (
     <>
@@ -116,6 +116,7 @@ const Cars = () => {
                 const isActive = activeFilter === category;
                 const getCategoryIcon = () => {
                   if (category === 'Car') return <CarIcon className="h-4 w-4" />;
+                  if (category === 'Motorcycle') return <Bike className="h-4 w-4" />;
                   if (category === 'Van') return <Box className="h-4 w-4" />;
                   if (category === 'Truck') return <Truck className="h-4 w-4" />;
                   return null;
@@ -137,6 +138,7 @@ const Cars = () => {
                     {getCategoryIcon()}
                     {category === 'All' ? t('common.all') : 
                      category === 'Car' ? t('common.car') : 
+                     category === 'Motorcycle' ? t('common.motorcycle') : 
                      category === 'Van' ? t('common.van') : 
                      t('common.truck')}
                   </Button>
@@ -176,7 +178,7 @@ const Cars = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCars.map((car) => (
-              <div key={car.id} className="group perspective-1000 h-[420px]">
+              <div key={car.id} className="group perspective-1000 h-[520px]">
                 <div className="relative w-full h-full transition-transform duration-700 transform-style-3d group-hover:rotate-y-180">
                   {/* Front of Card */}
                   <Card className="absolute w-full h-full backface-hidden overflow-hidden shadow-lg">
@@ -207,66 +209,66 @@ const Cars = () => {
                   </Card>
 
                   {/* Back of Card */}
-                  <Card className="absolute w-full h-full backface-hidden rotate-y-180 overflow-hidden shadow-lg bg-gradient-to-br from-[#800000] to-[#5a0000]">
-                    <CardContent className="pt-6 pb-4 h-full flex flex-col justify-between">
-                      <div>
+                  <Card className="absolute w-full h-full backface-hidden rotate-y-180 overflow-auto shadow-lg bg-gradient-to-br from-[#800000] to-[#5a0000]">
+                    <CardContent className="pt-6 pb-4 h-full flex flex-col">
+                      <div className="flex-1 overflow-y-auto">
                         <h3 className="text-2xl font-bold mb-6 text-center text-white">
                           {car.brand} {car.model}
                         </h3>
                         <div className="space-y-3">
                           {/* Engine */}
                           <div className="flex items-center gap-3">
-                            <div className="bg-white/10 p-3 rounded-full">
+                            <div className="bg-white/10 p-3 rounded-full flex-shrink-0">
                               <CarIcon className="h-6 w-6 text-white" />
                             </div>
-                            <div>
+                            <div className="min-w-0 flex-1">
                               <p className="text-sm text-white/70">{t('cars.engine')}</p>
-                              <p className="font-semibold text-white">{car.engine || t('cars.notSpecified')}</p>
+                              <p className="font-semibold text-white break-words overflow-wrap-anywhere">{car.engine || t('cars.notSpecified')}</p>
                             </div>
                           </div>
 
                           {/* Horsepower */}
                           <div className="flex items-center gap-3">
-                            <div className="bg-white/10 p-3 rounded-full">
+                            <div className="bg-white/10 p-3 rounded-full flex-shrink-0">
                               <Zap className="h-6 w-6 text-white" />
                             </div>
-                            <div>
+                            <div className="min-w-0 flex-1">
                               <p className="text-sm text-white/70">{t('cars.horsepower')}</p>
-                              <p className="font-semibold text-white">{car.horsepower || t('cars.notSpecified')}</p>
+                              <p className="font-semibold text-white break-words overflow-wrap-anywhere">{car.horsepower || t('cars.notSpecified')}</p>
                             </div>
                           </div>
 
                           {/* Top Speed */}
                           <div className="flex items-center gap-3">
-                            <div className="bg-white/10 p-3 rounded-full">
+                            <div className="bg-white/10 p-3 rounded-full flex-shrink-0">
                               <Gauge className="h-6 w-6 text-white" />
                             </div>
-                            <div>
+                            <div className="min-w-0 flex-1">
                               <p className="text-sm text-white/70">{t('cars.topSpeed')}</p>
-                              <p className="font-semibold text-white">{car.top_speed || t('cars.notSpecified')}</p>
+                              <p className="font-semibold text-white break-words overflow-wrap-anywhere">{car.top_speed || t('cars.notSpecified')}</p>
                             </div>
                           </div>
 
                           {/* Fuel Economy */}
                           <div className="flex items-center gap-3">
-                            <div className="bg-white/10 p-3 rounded-full">
+                            <div className="bg-white/10 p-3 rounded-full flex-shrink-0">
                               <Fuel className="h-6 w-6 text-white" />
                             </div>
-                            <div>
+                            <div className="min-w-0 flex-1">
                               <p className="text-sm text-white/70">{t('cars.fuelEconomy')}</p>
-                              <p className="font-semibold text-white">{car.fuel_consumption || t('cars.notSpecified')}</p>
+                              <p className="font-semibold text-white break-words overflow-wrap-anywhere">{car.fuel_consumption || t('cars.notSpecified')}</p>
                             </div>
                           </div>
                         </div>
                       </div>
                       
-                      {/* Buttons at bottom */}
-                      <div className="flex gap-2 mt-4">
+                      {/* Buttons at bottom - Always visible */}
+                      <div className="flex gap-2 mt-4 flex-shrink-0">
                         <Link to={`/cars/${car.id}`} className="flex-1">
-                          <Button className="w-full bg-[#C17A7A] hover:bg-[#A66565] text-white">{t('cars.viewDetails')}</Button>
+                          <Button size="lg" className="w-full bg-[#C17A7A] hover:bg-[#A66565] text-white">{t('cars.viewDetails')}</Button>
                         </Link>
                         <Link to={`/calculator?carId=${car.id}`} className="flex-1">
-                          <Button variant="secondary" className="w-full bg-white text-[#800000] hover:bg-white/90">{t('cars.calculateLoan')}</Button>
+                          <Button size="lg" variant="secondary" className="w-full bg-white text-[#800000] hover:bg-gray-200">{t('cars.calculateLoan')}</Button>
                         </Link>
                       </div>
                     </CardContent>

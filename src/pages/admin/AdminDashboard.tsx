@@ -48,11 +48,11 @@ const AdminDashboard = () => {
             <h1 className="text-3xl font-semibold mb-2">Admin Dashboard</h1>
             <p className="text-sm text-muted-foreground">Manage your car loan platform</p>
           </div>
-          <div className="flex gap-2 mt-4 md:mt-0">
+          <div className="flex gap-3 mt-4 md:mt-0">
             <Link to="/admin/cars/new">
               <Button className="rounded-xl hover:bg-primary/90 transition-all duration-200">
                 <Plus className="mr-2 h-4 w-4" />
-                Add Car
+                Add Vehicle
               </Button>
             </Link>
           </div>
@@ -62,7 +62,7 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <Card className="transition-all duration-200 hover:shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Cars</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Vehicles</CardTitle>
               <Car className="h-5 w-5 text-blue-500" />
             </CardHeader>
             <CardContent>
@@ -120,7 +120,7 @@ const AdminDashboard = () => {
             <CardHeader className="p-0 mb-4">
               <div className="flex items-center gap-2">
                 <Car className="h-6 w-6 text-blue-500" />
-                <CardTitle className="text-lg font-medium">Manage Cars</CardTitle>
+                <CardTitle className="text-lg font-medium">Manage Vehicles</CardTitle>
               </div>
               <CardDescription className="text-sm text-muted-foreground mt-1">
                 View and manage all vehicles in the system
@@ -130,13 +130,13 @@ const AdminDashboard = () => {
               <Link to="/admin/cars">
                 <Button className="w-full rounded-xl hover:bg-primary/90 transition-all duration-200">
                   <BarChart3 className="mr-2 h-4 w-4" />
-                  View All Cars
+                  View All Vehicles
                 </Button>
               </Link>
               <Link to="/admin/cars/new">
                 <Button variant="outline" className="w-full rounded-xl bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700 transition-all duration-200">
                   <Plus className="mr-2 h-4 w-4" />
-                  Add New Car
+                  Add New Vehicle
                 </Button>
               </Link>
             </CardContent>

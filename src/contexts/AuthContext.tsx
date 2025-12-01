@@ -23,10 +23,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkAdminRole = async (userId: string) => {
     const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
+      .from('admin_users')
+      .select('user_id')
       .eq('user_id', userId)
-      .eq('role', 'admin')
       .maybeSingle();
 
     setIsAdmin(!!data && !error);
@@ -89,7 +88,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      // Ignore 403 errors - session is already invalid
+      console.log('Sign out completed (session may have already expired)');
+    }
+    // Clear all auth state
+    setUser(null);
+    setSession(null);
     setIsAdmin(false);
   };
 
